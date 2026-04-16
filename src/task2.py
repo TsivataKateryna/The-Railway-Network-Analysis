@@ -1,7 +1,8 @@
 import pandas as pd
 
 
-INPUT_CSV = "data/belgium.csv"
+# INPUT_CSV = "data/belgium.csv"
+INPUT_CSV = "data/total.csv"
 df = pd.read_csv(INPUT_CSV, dtype=str).fillna("")
 
 def clustering_coefficient(df, station):
