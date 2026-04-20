@@ -57,6 +57,8 @@ def number_of_components(df):
 
     return components
 
+print(f"number_of_components {number_of_components(df)}")
+
 def only_path(df):
     """
     Returns a list of strings representing the stations in the only path from "Ahlbeck_Grenze" to "Peenemunde".
@@ -99,6 +101,8 @@ def only_path(df):
         cur = parent[cur]
     path.reverse()
     return path
+
+print(f"only_path {only_path(df)}")
 
 def length_of_path(df):
     """

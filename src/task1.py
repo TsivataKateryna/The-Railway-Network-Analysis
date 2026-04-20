@@ -13,9 +13,6 @@ def average_degree(df):
         a = str(row["station_a"])
         b = str(row["station_b"])
 
-        if not a or not b:
-            continue
-
         deg[a] = deg.get(a, 0) + 1
         deg[b] = deg.get(b, 0) + 1
 
@@ -37,9 +34,8 @@ def number_of_bridges(df):
     for idx, row in df.iterrows():
         a = str(row["station_a"])
         b = str(row["station_b"])
-        if not a or not b:
-            continue
-        key = tuple(sorted((a, b)))
+
+        key = (a, b) if a < b else (b, a)
         edge_count[key] = edge_count.get(key, 0) + 1
         adj.setdefault(a, []).append(b)
         adj.setdefault(b, []).append(a)
@@ -50,30 +46,44 @@ def number_of_bridges(df):
     visited = set()
     bridges = 0
 
-    def dfs(v, parent):
-        nonlocal timer, bridges
-        visited.add(v)
-        tin[v] = low[v] = timer
+    for s in adj:
+        if s in visited:
+            continue
+
+        visited.add(s)
+        tin[s] = low[s] = timer
         timer += 1
 
-        for to in adj[v]:
-            if to == parent:
-                k = tuple(sorted((v, parent)))
-                if edge_count.get(k, 0) > 1:
-                    low[v] = min(low[v], tin[parent])
-                continue
-            if to not in visited:
-                dfs(to, v)
-                low[v] = min(low[v], low[to])
-                k = tuple(sorted((v, to)))
-                if edge_count.get(k, 0) == 1 and low[to] > tin[v]:
-                    bridges += 1
-            else:
-                low[v] = min(low[v], tin[to])
+        # frame = [v, parent, next_index, parent_skipped]
+        stack = [[s, None, 0, False]]
+        while stack:
+            v, parent, i, parent_skipped = stack[-1]
+            neigh = adj.get(v, [])
 
-    for s in adj:
-        if s not in visited:
-            dfs(s, None)
+            if i >= len(neigh):
+                stack.pop()
+                if parent is not None:
+                    low[parent] = min(low[parent], low[v])
+                    k = (v, parent) if v < parent else (parent, v)
+                    if edge_count.get(k, 0) == 1 and low[v] > tin[parent]:
+                        bridges += 1
+                continue
+
+            to = neigh[i]
+            stack[-1][2] = i + 1
+
+            if to == parent and not parent_skipped:
+                stack[-1][3] = True
+                continue
+
+            if to in visited:
+                low[v] = min(low[v], tin[to])
+                continue
+
+            visited.add(to)
+            tin[to] = low[to] = timer
+            timer += 1
+            stack.append([to, v, 0, False])
 
     return bridges
 
@@ -87,8 +97,7 @@ def number_of_local_bridges(df):
     for idx, row in df.iterrows():
         a = str(row["station_a"])
         b = str(row["station_b"])
-        if not a or not b:
-            continue
+        
         if a not in adj:
             adj[a] = set()
         if b not in adj:
