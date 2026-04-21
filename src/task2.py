@@ -18,17 +18,15 @@ def clustering_coefficient(df, station):
         adj.setdefault(a, set()).add(b)
         adj.setdefault(b, set()).add(a)
 
-    nbrs = adj.get(station)
-    if not nbrs:
-        return 0.0
+    neib = adj.get(station)
 
-    k = len(nbrs)
+    k = len(neib)
     if k < 2:
         return 0.0
 
     linked_pairs = 0
-    for u in nbrs:
-        for v in nbrs:
+    for u in neib:
+        for v in neib:
             if u < v and v in adj[u]:
                 linked_pairs += 1
 
