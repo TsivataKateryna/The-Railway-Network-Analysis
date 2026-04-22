@@ -96,3 +96,20 @@ def betweenness_centrality(df, station):
 
     raw = _betweenness_raw(adj)
     return raw.get(station, 0.0) / denom
+
+
+if __name__ == "__main__":
+    adj = _build_weighted_graph(df)
+    raw = _betweenness_raw(adj)
+
+    n = len(adj)
+    denom = (n - 1) * (n - 2) / 2.0
+    if denom <= 0 or not raw:
+        print("Graph too small to compute betweenness centrality.")
+    else:
+        normalized = {v: raw_v / denom for v, raw_v in raw.items()}
+        best_station, best_value = max(normalized.items(), key=lambda kv: kv[1])
+        print(f"station_with_highest_betweenness {best_station}")
+        print(f"highest_betweenness_value {best_value}")
+
+
