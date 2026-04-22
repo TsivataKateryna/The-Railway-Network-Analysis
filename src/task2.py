@@ -46,18 +46,24 @@ def number_of_triangles(df):
     for idx, row in df.iterrows():
         a = str(row["station_a"])
         b = str(row["station_b"])
+
         if a == b:
             continue
+
         adj.setdefault(a, set()).add(b)
         adj.setdefault(b, set()).add(a)
 
-    n = 0
-    for a in adj:
+
+    nodes = list(adj.keys())
+    result = 0
+    for i, a in enumerate(nodes):
         for b in adj[a]:
             if b <= a:
                 continue
-            for c in adj[a] & adj[b]:
-                if c > b:
+            for c in adj[a]:
+                if c <= b:
+                    continue
+                if c in adj[b]:
                     n += 1
     return n
 
@@ -73,18 +79,29 @@ def number_of_balanced_triangles(df):
     for idx, row in df.iterrows():
         a = str(row["station_a"])
         b = str(row["station_b"])
+
         if a == b:
             continue
+
         adj.setdefault(a, set()).add(b)
         adj.setdefault(b, set()).add(a)
-        try:
-            d = float(row["distance_km"])
-        except (ValueError, TypeError):
-            continue
-        key = (a, b) if a < b else (b, a)
+
+        d = float(row["distance_km"])
+
+        mini = a
+        maxi = b
+        if b < a:
+            mini = b
+            maxi = a
+        key = (mini, maxi)
         dist[key] = d
 
     balanced = 0
+    
+    def edge_sign(x, y):
+        key = (x, y) if x < y else (y, x)
+        return 1 if dist.get(key, 0.0) < 1.0 else -1
+
     for a in adj:
         for b in adj[a]:
             if b <= a:
@@ -92,11 +109,9 @@ def number_of_balanced_triangles(df):
             for c in adj[a] & adj[b]:
                 if c <= b:
                     continue
-                s_ab = 1 if dist.get((a, b), 0.0) < 1.0 else -1
-                s_ac = 1 if dist.get((a, c), 0.0) < 1.0 else -1
-                s_bc = 1 if dist.get((b, c), 0.0) < 1.0 else -1
-                if s_ab * s_ac * s_bc == 1:
+                if edge_sign(a, b) * edge_sign(a, c) * edge_sign(b, c) == 1:
                     balanced += 1
+
     return balanced
 
 print(f"number_of_balanced_triangles {number_of_balanced_triangles(df)}")
