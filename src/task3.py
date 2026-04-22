@@ -11,75 +11,73 @@ df = pd.read_csv(INPUT_CSV, dtype=str).fillna("")
 def _build_weighted_graph(df):
     """Undirected graph: for each pair keep the minimum edge length (shortest direct link)."""
     adj = defaultdict(dict)
-    for _, row in df.iterrows():
+    for idx, row in df.iterrows():
         a = str(row["station_a"])
         b = str(row["station_b"])
         if a == b:
             continue
-        try:
-            w = float(row["distance_km"])
-        except (ValueError, TypeError):
-            continue
-        if b not in adj[a] or w < adj[a][b]:
-            adj[a][b] = w
-            adj[b][a] = w
+        d = float(row["distance_km"])
+        if b not in adj[a] or d < adj[a][b]:
+            adj[a][b] = d
+            adj[b][a] = d
     return adj
 
 
 def _betweenness_raw(adj):
     """
-    Unweighted shortest-path betweenness on positive weighted undirected graph.
-    Brandes + Dijkstra; undirected double-counting removed by factor 1/2.
+    Betweenness centrality on positive weighted undirected graph.
+    Brandes + Dijkstra with variable names aligned to the standard pseudocode.
+    Undirected double-counting removed by factor 1/2.
     """
-    nodes = list(adj.keys())
-    n = len(nodes)
+    V = list(adj.keys())
+    n = len(V)
     if n < 3:
-        return {v: 0.0 for v in nodes}
+        return dict.fromkeys(V, 0.0)
 
-    between = defaultdict(float)
+    C_B = defaultdict(float)
     eps = 1e-12
 
-    for s in nodes:
-        pred = defaultdict(list)
-        dist = {s: 0.0}
+    for s in V:
+        P = defaultdict(list)
+        d = {s: 0.0}
         sigma = defaultdict(float)
         sigma[s] = 1.0
-        heap = [(0.0, s)]
-        order = []
+        Q = [(0.0, s)]  # Dijkstra priority queue (BFS queue in unweighted version)
+        S = []
         settled = set()
 
-        while heap:
-            d_v, v = heapq.heappop(heap)
-            if abs(d_v - dist.get(v, float("inf"))) > eps:
+        while Q:
+            d_v, v = heapq.heappop(Q)
+            if abs(d_v - d.get(v, float("inf"))) > eps:
                 continue
             if v in settled:
                 continue
             settled.add(v)
-            order.append(v)
+            S.append(v)
             for w, len_vw in adj[v].items():
                 nd = d_v + len_vw
-                if w not in dist or nd + eps < dist[w]:
-                    dist[w] = nd
+                if w not in d or nd + eps < d[w]:
+                    d[w] = nd
                     sigma[w] = sigma[v]
-                    pred[w] = [v]
-                    heapq.heappush(heap, (nd, w))
-                elif abs(nd - dist[w]) <= eps:
+                    P[w] = [v]
+                    heapq.heappush(Q, (nd, w))
+                elif abs(nd - d[w]) <= eps:
                     sigma[w] += sigma[v]
-                    pred[w].append(v)
+                    P[w].append(v)
 
         delta = defaultdict(float)
-        for w in reversed(order):
+        for w in reversed(S):
             coeff = (1.0 + delta[w]) / sigma[w] if sigma[w] else 0.0
-            for v in pred[w]:
+            for v in P[w]:
                 delta[v] += sigma[v] * coeff
             if w != s:
-                between[w] += delta[w]
+                C_B[w] += delta[w]
 
-    for v in between:
-        between[v] *= 0.5
-    for v in nodes:
-        between.setdefault(v, 0.0)
-    return between
+    for v in C_B:
+        C_B[v] *= 0.5
+    for v in V:
+        C_B.setdefault(v, 0.0)
+    return C_B
 
 
 def betweenness_centrality(df, station):
