@@ -9,7 +9,6 @@ df = pd.read_csv(INPUT_CSV, dtype=str).fillna("")
 
 
 def _build_weighted_graph(df):
-    """Undirected graph: for each pair keep the minimum edge length (shortest direct link)."""
     adj = defaultdict(dict)
     for idx, row in df.iterrows():
         a = str(row["station_a"])
@@ -24,11 +23,6 @@ def _build_weighted_graph(df):
 
 
 def _betweenness_raw(adj):
-    """
-    Betweenness centrality on positive weighted undirected graph.
-    Brandes + Dijkstra with variable names aligned to the standard pseudocode.
-    Undirected double-counting removed by factor 1/2.
-    """
     V = list(adj.keys())
     n = len(V)
     if n < 3:

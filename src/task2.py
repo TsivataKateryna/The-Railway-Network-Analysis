@@ -1,10 +1,5 @@
 import pandas as pd
 
-
-# INPUT_CSV = "data/belgium.csv"
-INPUT_CSV = "data/total.csv"
-df = pd.read_csv(INPUT_CSV, dtype=str).fillna("")
-
 def clustering_coefficient(df, station):
     """
     Returns the clustering coefficient of a node named `station` in the graph
@@ -18,7 +13,7 @@ def clustering_coefficient(df, station):
         adj.setdefault(a, set()).add(b)
         adj.setdefault(b, set()).add(a)
 
-    neib = adj.get(station)
+    neib = adj.get(station, set())
 
     k = len(neib)
     if k < 2:
@@ -31,12 +26,6 @@ def clustering_coefficient(df, station):
                 linked_pairs += 1
 
     return (2.0 * linked_pairs) / (k * (k - 1))
-
-print(f" clustering_coefficient Berlin_Westhafen {clustering_coefficient(df, "Berlin_Westhafen")}")
-print(f" clustering_coefficient Krakow_Gowny {clustering_coefficient(df, "Krakow_Gowny")}")
-print(f" clustering_coefficient Amsterdam_Transformatorweg_Aansl {clustering_coefficient(df, "Amsterdam_Transformatorweg_Aansl.")}")
-print(f" clustering_coefficient ROMA_TERMINI {clustering_coefficient(df, "ROMA_TERMINI")}")
-
 
 def number_of_triangles(df):
     """
@@ -53,21 +42,15 @@ def number_of_triangles(df):
         adj.setdefault(a, set()).add(b)
         adj.setdefault(b, set()).add(a)
 
-
-    nodes = list(adj.keys())
-    result = 0
-    for i, a in enumerate(nodes):
+    triangles = 0
+    for a in adj:
         for b in adj[a]:
             if b <= a:
                 continue
-            for c in adj[a]:
-                if c <= b:
-                    continue
-                if c in adj[b]:
-                    n += 1
-    return n
-
-print(f"number_of_triangles {number_of_triangles(df)}")
+            for c in adj[a] & adj[b]:
+                if c > b:
+                    triangles += 1
+    return triangles
 
 
 def number_of_balanced_triangles(df):
@@ -114,16 +97,11 @@ def number_of_balanced_triangles(df):
 
     return balanced
 
-print(f"number_of_balanced_triangles {number_of_balanced_triangles(df)}")
-
 def number_of_unbalanced_triangles(df):
     """
     Returns the number of unbalanced triangles in the graph
     """
     return number_of_triangles(df) - number_of_balanced_triangles(df)
-
-print(f"number_of_unbalanced_triangles {number_of_unbalanced_triangles(df)}")
-
 
 def gcc(df):
     """
@@ -138,26 +116,15 @@ def gcc(df):
         adj.setdefault(a, set()).add(b)
         adj.setdefault(b, set()).add(a)
 
-    triangles = 0
-    for a in adj:
-        for b in adj[a]:
-            if b <= a:
-                continue
-            for c in adj[a] & adj[b]:
-                if c > b:
-                    triangles += 1
-
+    triangles = number_of_triangles(df)
     closed_triplets = 3 * triangles
 
-    open_triplets = 0
+    total_triplets = 0
     for v in adj:
-        for u in adj[v]:
-            for w in adj[v]:
-                if u < w and w not in adj[u]:
-                    open_triplets += 1
+        k = len(adj[v])
+        if k >= 2:
+            total_triplets += (k * (k - 1)) // 2
 
-    if open_triplets == 0:
+    if total_triplets == 0:
         return 0.0
-    return closed_triplets / open_triplets
-
-print(f"gcc {gcc(df)}")
+    return closed_triplets / total_triplets
