@@ -45,15 +45,15 @@ def number_of_components(df):
         if node in visited:
             continue
         components += 1
-        stack = [node]
+        s = [node]
         visited.add(node)
 
-        while stack:
-            v = stack.pop()
+        while s:
+            v = s.pop()
             for n in adj.get(v, set()):
                 if n not in visited:
                     visited.add(n)
-                    stack.append(n)
+                    s.append(n)
 
     return components
 
@@ -139,7 +139,7 @@ def shortest_path(df):
     """
     src = "Portarlington_Junction"
     dst = "Foyens_Junction"
-    # build adjacency + weights (undirected)
+
     adj = {}
     w = {}
     for idx, row in df.iterrows():
