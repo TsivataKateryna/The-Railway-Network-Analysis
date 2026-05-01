@@ -128,3 +128,20 @@ def gcc(df):
     if total_triplets == 0:
         return 0.0
     return closed_triplets / total_triplets
+
+
+if __name__ == "__main__":
+
+    df = pd.read_csv("data/total.csv", dtype=str).fillna("")
+
+    print("Clustering coefficients:")
+    print("Berlin_Westhafen:", clustering_coefficient(df, "Berlin_Westhafen"))
+    print("Krakow_Gowny:", clustering_coefficient(df, "Krakow_Gowny"))
+    print("Amsterdam_Transformatorweg_Aansl.:", clustering_coefficient(df, "Amsterdam_Transformatorweg_Aansl."))
+    print("ROMA_TERMINI:", clustering_coefficient(df, "ROMA_TERMINI"))
+
+    print("\nGlobal metrics:")
+    print("Number of triangles:", number_of_triangles(df))
+    print("Balanced triangles:", number_of_balanced_triangles(df))
+    print("Unbalanced triangles:", number_of_unbalanced_triangles(df))
+    print("GCC:", gcc(df))

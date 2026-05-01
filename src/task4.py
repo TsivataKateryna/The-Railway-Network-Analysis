@@ -139,3 +139,72 @@ def gain_from_split(df, station_a, station_b):
         # print("here")
         return 0.0
     return (final * float(d_uv) * 100.0) / float(denom)
+
+
+def compute_all_scores(df):
+    adj = _build_weighted_graph(df)
+    scores = {}
+
+    for node in adj:
+        scores[node] = score(df, node)
+
+    return scores
+
+
+def top_5_stations(df):
+    scores = compute_all_scores(df)
+    return sorted(scores.items(), key=lambda x: x[1], reverse=True)[:5]
+
+
+def bottom_5_stations(df):
+    scores = compute_all_scores(df)
+    return sorted(scores.items(), key=lambda x: x[1])[:5]
+
+
+def best_edges(df):
+    adj = _build_weighted_graph(df)
+    seen = set()
+    results = []
+
+    for u in adj:
+        for v in adj[u]:
+            edge = tuple(sorted((u, v)))
+            if edge in seen:
+                continue
+            seen.add(edge)
+
+            val = gain_from_split(df, u, v)
+            results.append((edge, val))
+
+    return sorted(results, key=lambda x: x[1], reverse=True)[:5]
+if __name__ == "__main__":
+
+    print("Top 5 stations:")
+    for name, val in top_5_stations(df):
+        print(name, val)
+
+    print("\nBottom 5 stations:")
+    for name, val in bottom_5_stations(df):
+        print(name, val)
+
+    print("\nBest edges:")
+    for edge, val in best_edges(df):
+        print(edge, val)
+
+    import matplotlib.pyplot as plt
+import numpy as np
+
+scores = compute_all_scores(df)
+
+values = list(scores.values())
+
+# éviter log(0)
+values = [v for v in values if v > 0]
+
+plt.hist(np.log10(values), bins=20)
+plt.title("Score distribution (log scale)")
+plt.xlabel("log10(score)")
+plt.ylabel("Number of stations")
+plt.savefig("histogram_task4.png")
+
+print("Histogram saved as histogram_task4.png")

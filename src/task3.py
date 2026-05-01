@@ -107,3 +107,24 @@ if __name__ == "__main__":
         print(f"highest_betweenness_value {best_value}")
 
 
+
+
+
+
+
+
+
+import matplotlib.pyplot as plt
+
+adj = _build_weighted_graph(df)   # 🔥 construire le graphe
+betweenness = _betweenness_raw(adj)  # 🔥 passer adj (PAS df)
+
+values = list(betweenness.values())
+
+plt.hist(values, bins=20)
+plt.title("Betweenness centrality distribution")
+plt.xlabel("Centrality")
+plt.ylabel("Number of nodes")
+plt.savefig("histogram_task3.png")
+
+print("Histogram saved as histogram_task3.png")

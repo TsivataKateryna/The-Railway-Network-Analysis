@@ -126,3 +126,28 @@ def number_of_local_bridges(df):
     return local_bridges
 
 print(f"number_of_local_bridges {number_of_local_bridges(df)}")
+import matplotlib.pyplot as plt
+
+# construire les degrés
+deg = {}
+for idx, row in df.iterrows():
+    a = str(row["station_a"])
+    b = str(row["station_b"])
+
+    deg[a] = deg.get(a, 0) + 1
+    deg[b] = deg.get(b, 0) + 1
+
+# garder uniquement degré <= 10
+filtered_degrees = [d for d in deg.values() if d <= 10]
+
+# faire le graphe
+plt.figure()
+plt.hist(filtered_degrees, bins=10)
+plt.title("Degree distribution (degree ≤ 10)")
+plt.xlabel("Degree")
+plt.ylabel("Number of nodes")
+
+# sauvegarder
+plt.savefig("histogram_task1.png")
+
+print("Histogram saved as histogram_task1.png")
